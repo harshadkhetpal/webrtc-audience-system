@@ -8,7 +8,7 @@ const getSocketUrl = () =>
   process.env.REACT_APP_BACKEND_URL ||
   (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
 
-const AGORA_APP_ID  = 'eef22b36609e44969d0173ef8c8ed95e';
+const AGORA_APP_ID  = process.env.REACT_APP_AGORA_APP_ID || 'eef22b36609e44969d0173ef8c8ed95e';
 const CHANNEL_NAME  = 'main-room';
 const AGORA_UID     = 1;
 
@@ -167,7 +167,7 @@ export default function ModeratorDashboard({ auth }) {
       // 1. Fetch a fresh signed token
       let liveToken = null;
       try {
-        const resp = await fetch(`/api/agora/token?channel=${encodeURIComponent(CHANNEL_NAME)}&uid=${AGORA_UID}`);
+        const resp = await fetch(`${getSocketUrl()}/api/agora/token?channel=${encodeURIComponent(CHANNEL_NAME)}&uid=${AGORA_UID}`);
         if (resp.ok) { liveToken = (await resp.json()).token; }
       } catch { /* null = no-cert mode */ }
 
