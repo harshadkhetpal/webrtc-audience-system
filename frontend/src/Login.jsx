@@ -4,6 +4,8 @@
  */
 import React, { useState } from 'react';
 
+const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+
 export default function Login({ onLogin }) {
   const [workspaceId, setWorkspaceId] = useState('default');
   const [passcode,    setPasscode]    = useState('');
@@ -15,7 +17,7 @@ export default function Login({ onLogin }) {
     setError('');
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ workspaceId: workspaceId.trim(), passcode: passcode.trim() }),
