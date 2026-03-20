@@ -222,13 +222,15 @@ export default function AudienceView({ workspaceId = 'default' }) {
   const speakerSrcLangRef     = useRef('en-US');
   const activeSpeakerSrcMMRef = useRef('en'); // MyMemory code of current speaker
 
-  const socketRef      = useRef(null);
-  const agoraClientRef = useRef(null);
-  const audioTrackRef  = useRef(null);
-  const lastSectionRef = useRef('');
-  const prevSpeakerRef = useRef(null);  // tracks previous speaker to detect new-speaker events
-  // Tracks speaking state inside GPS callback (avoids stale closure)
-  const isSpeakingRef  = useRef(false);
+  const socketRef         = useRef(null);
+  const agoraClientRef    = useRef(null);   // speaker client (publishes mic)
+  const listenerClientRef = useRef(null);   // audience client (subscribes to speaker)
+  const audioTrackRef     = useRef(null);
+  const lastSectionRef    = useRef('');
+  const prevSpeakerRef    = useRef(null);
+  const isSpeakingRef     = useRef(false);
+  const [isListening,     setIsListening]  = useState(false);
+  const [listenError,     setListenError]  = useState('');
 
   // ─── GPS watcher ──────────────────────────────────────────────────────────
   const VENUE_LAT = 28.9845, VENUE_LNG = 77.7064;
@@ -360,6 +362,42 @@ export default function AudienceView({ workspaceId = 'default' }) {
       agoraClientRef.current = null;
       setIsAudioReady(false);
     } catch (e) { console.error('Stop audio:', e); }
+  };
+
+  // ─── Audience listener: subscribe to speaker audio ────────────────────────
+  const startListening = async () => {
+    if (listenerClientRef.current || isSpeakingRef.current) return;
+    setListenError('');
+    try {
+      let token = null;
+      try {
+        const resp = await fetch(`${getSocketUrl()}/api/agora/token?channel=${encodeURIComponent(CHANNEL_NAME)}&uid=${AGORA_UID}`);
+        if (resp.ok) { const d = await resp.json(); token = d.token; }
+      } catch {}
+      const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
+      client.on('user-published', async (user, mediaType) => {
+        if (mediaType === 'audio') {
+          await client.subscribe(user, 'audio');
+          user.audioTrack?.play();
+          setIsListening(true);
+        }
+      });
+      client.on('user-unpublished', (user, mediaType) => {
+        if (mediaType === 'audio') { user.audioTrack?.stop(); setIsListening(false); }
+      });
+      await client.join(AGORA_APP_ID, CHANNEL_NAME, token, AGORA_UID);
+      listenerClientRef.current = client;
+      setIsListening(true);
+    } catch (e) {
+      setListenError('Could not connect audio. Tap retry.');
+      console.warn('[Listener]', e.message);
+    }
+  };
+
+  const stopListening = async () => {
+    try { await listenerClientRef.current?.leave(); } catch {}
+    listenerClientRef.current = null;
+    setIsListening(false);
   };
 
   // ─── Init: URL params + GPS + Socket ─────────────────────────────────────
@@ -699,6 +737,33 @@ export default function AudienceView({ workspaceId = 'default' }) {
     return (
       <div style={{ background:'#fff', borderRadius:12, padding:'12px 16px', marginTop:12,
         border:'1px solid #e2e8f0', boxShadow:'0 1px 6px rgba(0,0,0,.04)' }}>
+
+        {/* ── Hear speaker button ── */}
+        {!isSpeakingRef.current && (
+          <div style={{ marginBottom:12 }}>
+            {isListening ? (
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between',
+                padding:'8px 12px', borderRadius:9, background:'#f0fdf4', border:'1px solid #bbf7d0' }}>
+                <span style={{ fontSize:12, fontWeight:700, color:'#16a34a' }}>🔊 Hearing speaker live</span>
+                <button onClick={stopListening} style={{ fontSize:11, color:'#64748b', background:'none',
+                  border:'none', cursor:'pointer', fontWeight:600 }}>Stop</button>
+              </div>
+            ) : (
+              <button onClick={startListening} style={{
+                width:'100%', padding:'9px 0', borderRadius:9, border:'none',
+                background:'linear-gradient(90deg,#2563eb,#38bdf8)', color:'#fff',
+                fontSize:13, fontWeight:700, cursor:'pointer', letterSpacing:'.02em',
+              }}>
+                🔊 Tap to Hear Speaker
+              </button>
+            )}
+            {listenError && <div style={{ fontSize:11, color:'#ef4444', marginTop:4, textAlign:'center' }}>
+              {listenError} <button onClick={startListening} style={{ color:'#2563eb', background:'none',
+                border:'none', cursor:'pointer', fontSize:11, fontWeight:600 }}>Retry</button>
+            </div>}
+          </div>
+        )}
+
         <div style={{ fontSize:11, fontWeight:700, color:'#94a3b8', marginBottom:8, letterSpacing:'.05em' }}>
           REACT TO {(activeSpeaker.name || 'SPEAKER').toUpperCase()}
         </div>
