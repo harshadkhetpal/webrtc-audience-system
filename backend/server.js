@@ -334,7 +334,7 @@ app.get('/api/analytics', requireAuth, (req, res) => {
 // If AGORA_APP_CERTIFICATE is not set, returns null (works for Agora apps in
 // "Testing Mode" / no-certificate mode in the Agora Console).
 app.get('/api/agora/token', (req, res) => {
-  const appId       = process.env.AGORA_APP_ID       || 'fba8fe738d9049b2a1eb9534d038ae97';
+  const appId       = process.env.AGORA_APP_ID       || '80da85e2e0064199953b79c9ebded052';
   const certificate = process.env.AGORA_APP_CERTIFICATE || '';
   const channel     = (req.query.channel || 'main-room').slice(0, 64);
   const uid         = parseInt(req.query.uid, 10) || 0;

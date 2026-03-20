@@ -8,7 +8,7 @@ const getSocketUrl = () =>
   process.env.REACT_APP_BACKEND_URL ||
   (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
 
-const AGORA_APP_ID  = process.env.REACT_APP_AGORA_APP_ID || 'eef22b36609e44969d0173ef8c8ed95e';
+const AGORA_APP_ID  = process.env.REACT_APP_AGORA_APP_ID || '80da85e2e0064199953b79c9ebded052';
 const CHANNEL_NAME  = 'main-room';
 // Random UID per session — prevents multiple audience members colliding on UID 0
 const AGORA_UID     = Math.floor(Math.random() * 2_000_000) + 100;
