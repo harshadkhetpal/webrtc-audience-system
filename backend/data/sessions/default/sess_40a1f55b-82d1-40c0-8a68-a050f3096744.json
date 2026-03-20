@@ -1,0 +1,19 @@
+{
+  "sessionId": "sess_40a1f55b-82d1-40c0-8a68-a050f3096744",
+  "workspaceId": "default",
+  "roomId": "main",
+  "startedAt": "2026-03-14T15:40:49.708Z",
+  "endedAt": "2026-03-14T15:41:49.483Z",
+  "speakers": [
+    {
+      "name": "Anonymous",
+      "section": "Middle Left",
+      "topic": "",
+      "durationSec": 23,
+      "endedAt": "2026-03-14T15:41:49.483Z"
+    }
+  ],
+  "preQuestions": [],
+  "polls": [],
+  "aiSummary": null
+}

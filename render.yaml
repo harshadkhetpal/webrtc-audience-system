@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: audienceq
+    env: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: APP_URL
+        fromRender: true   # Render injects the live URL automatically
+      - key: ANTHROPIC_API_KEY
+        sync: false        # Set manually in Render dashboard
+      - key: AGORA_APP_ID
+        sync: false
+      - key: MODERATOR_PASSCODE
+        sync: false

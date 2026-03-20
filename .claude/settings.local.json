@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -r \"import.*\\\\\\(firebase\\\\|mongodb\\\\|mysql\\\\|postgres\\\\|axios\\\\|fetch\\\\|http\\\\\\)\" /Users/khetpal_jyo/webrtc-audience-system --include=*.js --include=*.jsx)",
+      "Bash(node --check server.js)",
+      "Bash(/usr/local/bin/node --version)",
+      "Bash(/usr/bin/node --version)",
+      "Bash(~/.nvm/versions/node/*/bin/node)",
+      "Bash(--version)",
+      "Bash(ls /Users/khetpal_jyo/webrtc-audience-system/frontend/src/*.jsx /Users/khetpal_jyo/webrtc-audience-system/frontend/src/*.js)",
+      "Bash(curl -s -X POST http://localhost:3001/api/auth/login -H \"Content-Type: application/json\" -d '{\"\"\"\"workspaceId\"\"\"\":\"\"\"\"default\"\"\"\",\"\"\"\"passcode\"\"\"\":\"\"\"\"admin123\"\"\"\"}')",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s \"http://localhost:3001/api/agora/token?channel=main-room&uid=0\")",
+      "Bash(curl -s \"http://localhost:3001/api/agora/token?channel=main-room&uid=1\")",
+      "Bash(/opt/homebrew/Cellar/node/23.11.0/bin/node node_modules/.bin/react-scripts build)"
+    ]
+  }
+}

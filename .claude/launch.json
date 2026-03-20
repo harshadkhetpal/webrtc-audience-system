@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["/Users/khetpal_jyo/webrtc-audience-system/start-frontend.sh"],
+      "port": 3000
+    }
+  ]
+}
