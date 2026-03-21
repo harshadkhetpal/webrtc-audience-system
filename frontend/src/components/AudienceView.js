@@ -293,13 +293,16 @@ export default function AudienceView({ workspaceId = 'default' }) {
   const startAudio = async () => {
     setAudioError(null);
     try {
-      // ── Fetch a fresh Agora token from the backend (never use a stale hardcoded one)
+      // ── Fetch a fresh Agora token from the backend
       let liveToken = null;
+      const tokenUrl = `${getSocketUrl()}/api/agora/token?channel=${encodeURIComponent(CHANNEL_NAME)}&uid=${AGORA_UID}`;
       try {
-        const resp = await fetch(`${getSocketUrl()}/api/agora/token?channel=${encodeURIComponent(CHANNEL_NAME)}&uid=${AGORA_UID}`);
+        const resp = await fetch(tokenUrl);
         if (resp.ok) { const data = await resp.json(); liveToken = data.token; }
-      } catch { /* network hiccup — fall through with null token */ }
+        else { console.warn('[Agora] Token fetch non-ok:', resp.status); }
+      } catch (e) { console.warn('[Agora] Token fetch failed:', e.message); }
 
+      console.log('[Agora] Joining with AppID:', AGORA_APP_ID, 'token:', liveToken ? 'OK' : 'null');
       agoraClientRef.current = AgoraRTC.createClient({ mode:'rtc', codec:'vp8' });
       await agoraClientRef.current.join(AGORA_APP_ID, CHANNEL_NAME, liveToken, AGORA_UID);
       audioTrackRef.current = await AgoraRTC.createMicrophoneAudioTrack({
@@ -309,11 +312,10 @@ export default function AudienceView({ workspaceId = 'default' }) {
       await agoraClientRef.current.publish([audioTrackRef.current]);
       setIsAudioReady(true);
     } catch (err) {
-      let msg = 'Could not access microphone. Please allow access and try again.';
-      if (err?.name === 'NotAllowedError') msg = 'Microphone permission denied. Allow it in browser settings.';
+      console.error('[Agora] startAudio error:', err?.code, err?.message, err?.name);
+      let msg = `Mic error: ${err?.message || err?.name || 'unknown'} (code ${err?.code || '?'})`;
+      if (err?.name === 'NotAllowedError') msg = 'Microphone permission denied. Allow it in browser settings then retry.';
       if (err?.name === 'NotFoundError')   msg = 'No microphone found. Please connect one.';
-      if (err?.message?.toLowerCase().includes('token'))         msg = 'Agora token error — please set AGORA_APP_CERTIFICATE on the server.';
-      if (err?.message?.toLowerCase().includes('invalid app id')) msg = 'Invalid Agora App ID — check your AGORA_APP_ID env on the server.';
       setAudioError(msg);
     }
   };
