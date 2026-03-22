@@ -371,12 +371,17 @@ export default function AudienceView({ workspaceId = 'default' }) {
     if (listenerClientRef.current || isSpeakingRef.current) return;
     setListenError('');
     try {
+      // Use a distinct UID range for listeners to avoid clashing with speakers
+      const listenerUid = Math.floor(Math.random() * 1_000_000) + 3_000_000;
       let token = null;
       try {
-        const resp = await fetch(`${getSocketUrl()}/api/agora/token?channel=${encodeURIComponent(CHANNEL_NAME)}&uid=${AGORA_UID}`);
+        const resp = await fetch(`${getSocketUrl()}/api/agora/token?channel=${encodeURIComponent(CHANNEL_NAME)}&uid=${listenerUid}`);
         if (resp.ok) { const d = await resp.json(); token = d.token; }
-      } catch {}
+      } catch (e) { console.warn('[Listener] token fetch failed:', e.message); }
+
       const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
+
+      // Handle new publishers (speaker starts AFTER we join)
       client.on('user-published', async (user, mediaType) => {
         if (mediaType === 'audio') {
           await client.subscribe(user, 'audio');
@@ -385,14 +390,29 @@ export default function AudienceView({ workspaceId = 'default' }) {
         }
       });
       client.on('user-unpublished', (user, mediaType) => {
-        if (mediaType === 'audio') { user.audioTrack?.stop(); setIsListening(false); }
+        if (mediaType === 'audio') { user.audioTrack?.stop(); }
       });
-      await client.join(AGORA_APP_ID, CHANNEL_NAME, token, AGORA_UID);
+
+      await client.join(AGORA_APP_ID, CHANNEL_NAME, token, listenerUid);
       listenerClientRef.current = client;
+
+      // ★ KEY FIX: subscribe to users ALREADY publishing before we joined
+      const existing = client.remoteUsers;
+      let heardSomeone = false;
+      for (const user of existing) {
+        if (user.hasAudio) {
+          await client.subscribe(user, 'audio');
+          user.audioTrack?.play();
+          heardSomeone = true;
+        }
+      }
       setIsListening(true);
+      if (!heardSomeone && existing.length === 0) {
+        setListenError('No speaker active yet — you\'ll hear them automatically when they start.');
+      }
     } catch (e) {
-      setListenError('Could not connect audio. Tap retry.');
-      console.warn('[Listener]', e.message);
+      console.error('[Listener] error:', e?.code, e?.message);
+      setListenError(`Audio error: ${e?.message || e?.code || 'unknown'} — tap retry`);
     }
   };
 

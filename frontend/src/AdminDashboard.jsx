@@ -57,15 +57,17 @@ function StatCard({ icon, label, value, sub, color = C.blue }) {
 
 // ── Bar Row ───────────────────────────────────────────────────────────────────
 function BarRow({ label, value, max, color = C.blue }) {
-  const pct = max > 0 ? Math.round((value / max) * 80) : 0;
+  // Cap at 85%, never allow full-width even when value === max
+  const pct = max > 1 ? Math.min(Math.round((value / max) * 85), 85) : value > 0 ? 55 : 0;
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, minWidth: 0 }}>
-      <div style={{ width: 120, fontSize: 12, color: C.text, fontWeight: 500, flexShrink: 0,
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, width: '100%', overflow: 'hidden' }}>
+      <div style={{ width: 100, fontSize: 12, color: C.text, fontWeight: 500, flexShrink: 0,
         whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
       <div style={{ flex: 1, minWidth: 0, height: 8, background: C.light, borderRadius: 99, overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 99, transition: 'width .4s ease' }} />
+        <div style={{ height: '100%', width: `${pct}%`, maxWidth: '100%', background: color,
+          borderRadius: 99, transition: 'width .4s ease' }} />
       </div>
-      <div style={{ width: 32, fontSize: 12, fontWeight: 700, color: C.muted, textAlign: 'right', flexShrink: 0 }}>{value}</div>
+      <div style={{ width: 28, fontSize: 12, fontWeight: 700, color: C.muted, textAlign: 'right', flexShrink: 0 }}>{value}</div>
     </div>
   );
 }
